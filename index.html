@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DarkCoin Wallet</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app">
+        <h1>DarkCoin Wallet</h1>
+
+        <div id="login-section">
+            <h3>Login</h3>
+            <input type="text" id="login-id" placeholder="Account ID">
+            <input type="password" id="login-password" placeholder="Password">
+            <button onclick="login()">Login</button>
+        </div>
+
+        <div id="wallet-section" style="display: none;">
+            <h3>Welcome, <span id="user-id"></span></h3>
+            <p>Your balance: <span id="balance"></span> DarkCoin</p>
+            <input type="text" id="transfer-to-id" placeholder="Recipient ID">
+            <input type="number" id="transfer-amount" placeholder="Amount">
+            <button onclick="transfer()">Transfer DarkCoin</button>
+            <button onclick="changePassword()">Change Password</button>
+            <h4>Last 10 Transactions:</h4>
+            <ul id="transaction-list"></ul>
+
+            <div id="admin-section" style="display: none;">
+                <h3>Admin Controls</h3>
+                <input type="text" id="new-account-id" placeholder="New Account ID">
+                <input type="password" id="new-account-password" placeholder="New Account Password">
+                <button onclick="createAccount()">Create Account</button>
+                <button onclick="deleteAccount()">Delete Account</button>
+                <button onclick="setExchangeRate()">Set Exchange Rate</button>
+                <button onclick="addFunds()">Add Funds to Account</button>
+                <button onclick="removeFunds()">Remove Funds from Account</button>
+                <button onclick="renameAccount()">Rename Account</button>
+                <button onclick="viewAccounts()">View All Accounts</button>
+                <ul id="accounts-list"></ul>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

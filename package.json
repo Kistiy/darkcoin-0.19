@@ -1,0 +1,20 @@
+{
+  "name": "darkcoin-app",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+	"start": "node server.js"
+    	"test": "echo \"Error: no test specified\" && exit 1"
+  },
+"dependencies": {
+    "express": "^4.17.1"  // если вы используете express
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.19.2"
+  }
+}

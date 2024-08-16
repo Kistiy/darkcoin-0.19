@@ -1,0 +1,49 @@
+body {
+    font-family: Arial, sans-serif;
+    background-image: url('background.jpg'); /* Укажите путь к вашей фоновой картинке */
+    background-size: cover;
+    color: white;
+    text-align: center;
+}
+
+#app {
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+    background-color: rgba(0, 0, 0, 0.7); /* Полупрозрачный черный фон */
+    border-radius: 10px;
+}
+
+input {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    border: none;
+}
+
+button {
+    padding: 10px;
+    margin: 5px;
+    border-radius: 5px;
+    border: none;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #45a049;
+}
+
+#accounts-list {
+    list-style-type: none;
+    padding: 0;
+    text-align: left;
+}
+
+#accounts-list li {
+    padding: 10px;
+    margin: 5px 0;
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+}
