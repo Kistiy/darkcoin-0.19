@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const path = require('path'); // Добавьте этот импорт
 
 const app = express();
 
@@ -15,11 +16,6 @@ app.get('/', (req, res) => {
 // Пример других маршрутов, если они есть
 app.get('/about', (req, res) => {
     res.send('This is the about page');
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
 });
 
 // Хранилище данных (эмуляция базы данных)
@@ -175,6 +171,7 @@ app.get('/view-accounts', (req, res) => {
 });
 
 // Запуск сервера
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
