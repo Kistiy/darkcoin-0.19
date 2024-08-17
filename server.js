@@ -8,6 +8,9 @@ const app = express();
 app.use(bodyParser.json());
 app.use(cors());
 
+// Поддержка статических файлов
+app.use(express.static(path.join(__dirname, 'public')));
+
 // Этот маршрут отвечает на запросы к корневому URL "/"
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
