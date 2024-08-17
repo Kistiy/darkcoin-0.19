@@ -8,6 +8,21 @@ const PORT = 3000;
 app.use(bodyParser.json());
 app.use(cors());
 
+// Этот маршрут отвечает на запросы к корневому URL "/"
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Пример других маршрутов, если они есть
+app.get('/about', (req, res) => {
+    res.send('This is the about page');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
+
 // Хранилище данных (эмуляция базы данных)
 const accounts = {
     master: { password: 'masterpassword', balance: 1000000, transactions: [] },
