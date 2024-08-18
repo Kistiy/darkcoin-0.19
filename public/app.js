@@ -7,7 +7,7 @@ function login() {
     const id = document.getElementById('login-id').value;
     const password = document.getElementById('login-password').value;
 
-    fetch('http://localhost:3000/login', {
+    fetch('/login', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -47,7 +47,7 @@ function transfer() {
         return;
     }
 
-    fetch('http://localhost:3000/transfer', {
+    fetch('/transfer', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -72,7 +72,7 @@ function transfer() {
 function changePassword() {
     const newPassword = prompt("Enter your new password:");
 
-    fetch('http://localhost:3000/change-password', {
+    fetch('/change-password', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ function changePassword() {
 
 // Load Last 10 Transactions
 function loadTransactions() {
-    fetch('http://localhost:3000/transactions', {
+    fetch('/transactions', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -121,7 +121,7 @@ function createAccount() {
     const id = document.getElementById('new-account-id').value;
     const password = document.getElementById('new-account-password').value;
 
-    fetch('http://localhost:3000/create-account', {
+    fetch('/create-account', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -143,7 +143,7 @@ function createAccount() {
 function deleteAccount() {
     const id = prompt("Enter the ID of the account to delete:");
 
-    fetch('http://localhost:3000/delete-account', {
+    fetch('/delete-account', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -165,7 +165,7 @@ function deleteAccount() {
 function setExchangeRate() {
     const rate = parseFloat(prompt("Enter the new exchange rate:"));
 
-    fetch('http://localhost:3000/set-exchange-rate', {
+    fetch('/set-exchange-rate', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -188,7 +188,7 @@ function addFunds() {
     const id = prompt("Enter the ID of the account to add funds to:");
     const amount = parseFloat(prompt("Enter the amount of DarkCoin to add:"));
 
-    fetch('http://localhost:3000/add-funds', {
+    fetch('/add-funds', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -211,7 +211,7 @@ function removeFunds() {
     const id = prompt("Enter the ID of the account to remove funds from:");
     const amount = parseFloat(prompt("Enter the amount of DarkCoin to remove:"));
 
-    fetch('http://localhost:3000/remove-funds', {
+    fetch('/remove-funds', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -234,7 +234,7 @@ function renameAccount() {
     const id = prompt("Enter the ID of the account to rename:");
     const newName = prompt("Enter the new name for the account:");
 
-    fetch('http://localhost:3000/rename-account', {
+    fetch('/rename-account', {  // Изменено на относительный путь
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -254,7 +254,7 @@ function renameAccount() {
 
 // Admin: View All Accounts
 function viewAccounts() {
-    fetch('http://localhost:3000/view-accounts', {
+    fetch('/view-accounts', {  // Изменено на относительный путь
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',
