@@ -4,8 +4,17 @@ const cors = require('cors');
 const path = require('path');
 const admin = require('firebase-admin');
 
-// Получение конфигурации из переменной среды
-const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+// Проверка и получение конфигурации из переменной среды
+let firebaseConfig;
+try {
+    firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
+    if (!firebaseConfig || typeof firebaseConfig !== 'object') {
+        throw new Error('Invalid FIREBASE_CONFIG');
+    }
+} catch (error) {
+    console.error('Failed to parse FIREBASE_CONFIG:', error);
+    process.exit(1);
+}
 
 admin.initializeApp({
     credential: admin.credential.cert(firebaseConfig),
