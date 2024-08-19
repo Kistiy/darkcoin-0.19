@@ -1,8 +1,18 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const path = require('path'); // Добавьте этот импорт
+const path = require('path');
+const admin = require('firebase-admin');
 
+// Инициализация Firebase Admin SDK
+const serviceAccount = require('./firebaseServiceAccountKey.json');
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: "https://darkcoin-f035f-default-rtdb.europe-west1.firebasedatabase.app/" // замените на ваш URL базы данных
+});
+
+const db = admin.database();
 const app = express();
 
 app.use(bodyParser.json());
@@ -21,156 +31,224 @@ app.get('/about', (req, res) => {
     res.send('This is the about page');
 });
 
-// Хранилище данных (эмуляция базы данных)
-const accounts = {
-    master: { password: 'masterpassword', balance: 1000000, transactions: [] },
-    user1: { password: 'user1password', balance: 100, transactions: [] },
-    user2: { password: 'user2password', balance: 50, transactions: [] },
-};
-
 // Логин
-app.post('/login', (req, res) => {
+app.post('/login', async (req, res) => {
     const { id, password } = req.body;
-    if (accounts[id] && accounts[id].password === password) {
-        res.json({ success: true, balance: accounts[id].balance });
-    } else {
-        res.json({ success: false, message: 'Invalid credentials' });
+    
+    try {
+        const snapshot = await db.ref(`accounts/${id}`).once('value');
+        const account = snapshot.val();
+        
+        if (account && account.password === password) {
+            res.json({ success: true, balance: account.balance });
+        } else {
+            res.json({ success: false, message: 'Invalid credentials' });
+        }
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
 });
 
 // Перевод DarkCoin
-app.post('/transfer', (req, res) => {
+app.post('/transfer', async (req, res) => {
     const { fromId, toId, amount } = req.body;
 
-    if (!accounts[fromId] || !accounts[toId]) {
-        return res.json({ success: false, message: 'Account not found' });
+    try {
+        const fromSnapshot = await db.ref(`accounts/${fromId}`).once('value');
+        const toSnapshot = await db.ref(`accounts/${toId}`).once('value');
+        const fromAccount = fromSnapshot.val();
+        const toAccount = toSnapshot.val();
+
+        if (!fromAccount || !toAccount) {
+            return res.json({ success: false, message: 'Account not found' });
+        }
+
+        const fee = Math.floor(amount * 0.05);  // 5% комиссия
+        const netAmount = amount - fee;
+
+        if (fromAccount.balance < amount) {
+            return res.json({ success: false, message: 'Insufficient balance' });
+        }
+
+        await db.ref(`accounts/${fromId}`).update({
+            balance: fromAccount.balance - amount
+        });
+
+        await db.ref(`accounts/${toId}`).update({
+            balance: toAccount.balance + netAmount
+        });
+
+        await db.ref('accounts/master').transaction(masterAccount => {
+            if (masterAccount) {
+                masterAccount.balance += fee;
+            }
+            return masterAccount;
+        });
+
+        const transaction = {
+            date: new Date().toISOString(),
+            type: 'Transfer',
+            amount,
+            counterparty: toId,
+        };
+        await db.ref(`accounts/${fromId}/transactions`).push(transaction);
+
+        const recipientTransaction = {
+            date: new Date().toISOString(),
+            type: 'Received',
+            amount: netAmount,
+            counterparty: fromId,
+        };
+        await db.ref(`accounts/${toId}/transactions`).push(recipientTransaction);
+
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
-
-    const fee = Math.floor(amount * 0.05);  // 5% комиссия
-    const netAmount = amount - fee;
-
-    if (accounts[fromId].balance < amount) {
-        return res.json({ success: false, message: 'Insufficient balance' });
-    }
-
-    // Списание средств с отправителя
-    accounts[fromId].balance -= amount;
-
-    // Пополнение счета получателя
-    accounts[toId].balance += netAmount;
-
-    // Перевод комиссии на мастер-аккаунт
-    accounts.master.balance += fee;
-
-    // Запись транзакций
-    const transaction = {
-        date: new Date().toISOString(),
-        type: 'Transfer',
-        amount,
-        counterparty: toId,
-    };
-    accounts[fromId].transactions.push(transaction);
-
-    const recipientTransaction = {
-        date: new Date().toISOString(),
-        type: 'Received',
-        amount: netAmount,
-        counterparty: fromId,
-    };
-    accounts[toId].transactions.push(recipientTransaction);
-
-    res.json({ success: true });
 });
 
 // Получение последних 10 транзакций
-app.post('/transactions', (req, res) => {
+app.post('/transactions', async (req, res) => {
     const { id } = req.body;
 
-    if (!accounts[id]) {
-        return res.json({ success: false, message: 'Account not found' });
+    try {
+        const snapshot = await db.ref(`accounts/${id}/transactions`).limitToLast(10).once('value');
+        const transactions = snapshot.val() || [];
+        res.json({ success: true, transactions });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
     }
-
-    const transactions = accounts[id].transactions.slice(-10);
-    res.json({ success: true, transactions });
 });
 
 // Создание аккаунта (админ)
-app.post('/create-account', (req, res) => {
+app.post('/create-account', async (req, res) => {
     const { id, password } = req.body;
 
-    if (accounts[id]) {
-        return res.json({ success: false, message: 'Account already exists' });
-    }
+    try {
+        const snapshot = await db.ref(`accounts/${id}`).once('value');
+        
+        if (snapshot.exists()) {
+            return res.json({ success: false, message: 'Account already exists' });
+        }
 
-    accounts[id] = { password, balance: 0, transactions: [] };
-    res.json({ success: true });
+        await db.ref(`accounts/${id}`).set({
+            password,
+            balance: 0,
+            transactions: []
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 });
 
 // Удаление аккаунта (админ)
-app.post('/delete-account', (req, res) => {
+app.post('/delete-account', async (req, res) => {
     const { id } = req.body;
 
-    if (!accounts[id]) {
-        return res.json({ success: false, message: 'Account not found' });
-    }
+    try {
+        const snapshot = await db.ref(`accounts/${id}`).once('value');
+        
+        if (!snapshot.exists()) {
+            return res.json({ success: false, message: 'Account not found' });
+        }
 
-    delete accounts[id];
-    res.json({ success: true });
+        await db.ref(`accounts/${id}`).remove();
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 });
 
 // Добавление средств (админ)
-app.post('/add-funds', (req, res) => {
+app.post('/add-funds', async (req, res) => {
     const { id, amount } = req.body;
 
-    if (!accounts[id]) {
-        return res.json({ success: false, message: 'Account not found' });
-    }
+    try {
+        const snapshot = await db.ref(`accounts/${id}`).once('value');
+        const account = snapshot.val();
+        
+        if (!account) {
+            return res.json({ success: false, message: 'Account not found' });
+        }
 
-    accounts[id].balance += amount;
-    res.json({ success: true });
+        await db.ref(`accounts/${id}`).update({
+            balance: account.balance + amount
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 });
 
 // Удаление средств (админ)
-app.post('/remove-funds', (req, res) => {
+app.post('/remove-funds', async (req, res) => {
     const { id, amount } = req.body;
 
-    if (!accounts[id]) {
-        return res.json({ success: false, message: 'Account not found' });
-    }
+    try {
+        const snapshot = await db.ref(`accounts/${id}`).once('value');
+        const account = snapshot.val();
+        
+        if (!account) {
+            return res.json({ success: false, message: 'Account not found' });
+        }
 
-    if (accounts[id].balance < amount) {
-        return res.json({ success: false, message: 'Insufficient balance' });
-    }
+        if (account.balance < amount) {
+            return res.json({ success: false, message: 'Insufficient balance' });
+        }
 
-    accounts[id].balance -= amount;
-    res.json({ success: true });
+        await db.ref(`accounts/${id}`).update({
+            balance: account.balance - amount
+        });
+
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 });
 
 // Переименование аккаунта (админ)
-app.post('/rename-account', (req, res) => {
+app.post('/rename-account', async (req, res) => {
     const { id, newName } = req.body;
 
-    if (!accounts[id]) {
-        return res.json({ success: false, message: 'Account not found' });
-    }
+    try {
+        const snapshot = await db.ref(`accounts/${id}`).once('value');
+        const account = snapshot.val();
+        
+        if (!account) {
+            return res.json({ success: false, message: 'Account not found' });
+        }
 
-    if (accounts[newName]) {
-        return res.json({ success: false, message: 'New name already in use' });
-    }
+        const newNameSnapshot = await db.ref(`accounts/${newName}`).once('value');
+        if (newNameSnapshot.exists()) {
+            return res.json({ success: false, message: 'New name already in use' });
+        }
 
-    accounts[newName] = accounts[id];
-    delete accounts[id];
-    res.json({ success: true });
+        await db.ref(`accounts/${newName}`).set(account);
+        await db.ref(`accounts/${id}`).remove();
+
+        res.json({ success: true });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 });
 
 // Просмотр всех аккаунтов (админ)
-app.get('/view-accounts', (req, res) => {
-    const allAccounts = Object.keys(accounts).map(id => ({
-        id,
-        balance: accounts[id].balance,
-        password: accounts[id].password
-    }));
-    res.json({ success: true, accounts: allAccounts });
+app.get('/view-accounts', async (req, res) => {
+    try {
+        const snapshot = await db.ref('accounts').once('value');
+        const accounts = snapshot.val() || {};
+        const allAccounts = Object.keys(accounts).map(id => ({
+            id,
+            balance: accounts[id].balance,
+            password: accounts[id].password
+        }));
+        res.json({ success: true, accounts: allAccounts });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
 });
 
 // Запуск сервера
