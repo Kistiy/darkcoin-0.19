@@ -4,12 +4,12 @@ const cors = require('cors');
 const path = require('path');
 const admin = require('firebase-admin');
 
-// Инициализация Firebase Admin SDK
-const serviceAccount = require('./firebaseServiceAccountKey.json');
+// Получение конфигурации из переменной среды
+const firebaseConfig = JSON.parse(process.env.FIREBASE_CONFIG);
 
 admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    databaseURL: "https://darkcoin-f035f-default-rtdb.europe-west1.firebasedatabase.app/" // замените на ваш URL базы данных
+    credential: admin.credential.cert(firebaseConfig),
+    databaseURL: "https://darkcoin-f035f-default-rtdb.europe-west1.firebasedatabase.app/" // Замените на ваш URL базы данных
 });
 
 const db = admin.database();
