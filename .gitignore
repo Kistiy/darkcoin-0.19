@@ -1,20 +1,9 @@
-# Node modules
-node_modules/
-
-# Логи
-*.log
-
-# Директория временных файлов
-tmp/
-temp/
-
-# Конфиденциальные файлы
+# Игнорировать файл с учетными данными Firebase
 firebaseServiceAccountKey.json
 
-# IDE
-.vscode/
-.idea/
+# Игнорировать папку node_modules
+node_modules/
 
-# Системные файлы
-.DS_Store
+# Игнорировать конфигурационные файлы и лог-файлы
 .env
+*.log
