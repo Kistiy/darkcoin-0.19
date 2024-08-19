@@ -1,0 +1,20 @@
+# Node modules
+node_modules/
+
+# Логи
+*.log
+
+# Директория временных файлов
+tmp/
+temp/
+
+# Конфиденциальные файлы
+firebaseServiceAccountKey.json
+
+# IDE
+.vscode/
+.idea/
+
+# Системные файлы
+.DS_Store
+.env
